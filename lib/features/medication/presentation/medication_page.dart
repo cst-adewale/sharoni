@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sharoni/core/theme.dart';
 import 'package:sharoni/features/medication/presentation/medication_controller.dart';
-import 'package:sharoni/features/home/presentation/navigation_controller.dart';
 import 'package:sharoni/core/models/medication.dart';
 
 class MedicationPage extends ConsumerStatefulWidget {
@@ -225,8 +224,6 @@ class _MedicationPageState extends ConsumerState<MedicationPage> {
   @override
   Widget build(BuildContext context) {
     final medicationsAsync = ref.watch(medicationControllerProvider);
-    final size = MediaQuery.of(context).size;
-    final isWide = size.width > 900;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
@@ -295,7 +292,7 @@ class _MedicationPageState extends ConsumerState<MedicationPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Colors.black.withValues(alpha: 0.02),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -525,10 +522,10 @@ class _MedicationPageState extends ConsumerState<MedicationPage> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.medication_outlined, size: 80, color: AppTheme.primaryColor.withOpacity(0.5)),
+            child: Icon(Icons.medication_outlined, size: 80, color: AppTheme.primaryColor.withValues(alpha: 0.5)),
           ),
           const SizedBox(height: 24),
           const Text(

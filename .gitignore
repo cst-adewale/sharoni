@@ -63,6 +63,7 @@ DerivedData/
 
 # Environment files
 .env*
+assets/env
 !.env.example
 
 # Symbolication/Obfuscation

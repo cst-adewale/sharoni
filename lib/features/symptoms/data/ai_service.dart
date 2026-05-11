@@ -1,26 +1,90 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sharoni/core/models/profile.dart';
 import 'package:sharoni/core/models/symptom.dart';
 
 final aiServiceProvider = Provider((ref) => AIService());
 
 class AIService {
-  // Normally you would use an environment variable or a secure vault
-  final String _apiKey = 'hf_your_api_key_placeholder'; 
+  // Retrieve API Key from .env file for security
+  final String _apiKey = dotenv.env['HF_API_KEY'] ?? ''; 
   // Using BioMistral-7B-Instruct: A state-of-the-art generative LLM fine-tuned on 
   // medical/clinical text. This provides the "Generative" power needed for 
   // advice and analysis that ClinicalBERT (encoder-only) lacks.
-  final String _modelUrl = 'https://api-inference.huggingface.co/models/BioMistral/BioMistral-7B-Instruct';
+  final String _mistralUrl = 'https://api-inference.huggingface.co/models/BioMistral/BioMistral-7B-Instruct';
+  
+  // Clinical BERT NER: Specialized for extracting medical entities like Symptoms and Diseases.
+  // Using a BERT-based model fine-tuned for medical NER (Clinical-AI-Apollo/Medical-NER)
+  // to satisfy Clinical BERT research requirements.
+  final String _bertUrl = 'https://api-inference.huggingface.co/models/Clinical-AI-Apollo/Medical-NER';
 
   Future<SymptomAnalysis> analyzeSymptoms(String description, [Profile? profile]) async {
-    return _analyzeInternal(description, profile: profile);
+    try {
+      // Run both in parallel to save time
+      final results = await Future.wait([
+        _extractEntitiesWithClinicalBERT(description),
+        _analyzeInternal(description, profile: profile),
+      ]);
+
+      final bertSymptoms = results[0] as List<String>;
+      final analysis = results[1] as SymptomAnalysis;
+
+      if (bertSymptoms.isNotEmpty) {
+        analysis.symptoms.addAll(bertSymptoms.where((s) => !analysis.symptoms.contains(s)));
+      }
+      return analysis;
+    } catch (e) {
+      debugPrint('AI Pipeline Error: $e. Using local fallback.');
+      return _generateFallbackAnalysis(description);
+    }
+  }
+
+  Future<List<String>> _extractEntitiesWithClinicalBERT(String text) async {
+    try {
+      debugPrint('Calling Clinical BERT Inference API...');
+      final response = await http.post(
+        Uri.parse(_bertUrl),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'inputs': text}),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! List) {
+          debugPrint('Clinical BERT unexpected response: $decoded');
+          return [];
+        }
+        final List<dynamic> data = decoded;
+        final entities = <String>{};
+        
+        for (var entity in data) {
+          final label = entity['entity_group']?.toString().toUpperCase();
+          final word = entity['word']?.toString().trim();
+          
+          // We look for Symptoms (Sign_symptom) or Diseases
+          if ((label == 'SIGN_SYMPTOM' || label == 'DISEASE' || label == 'BIOLOGICAL_STRUCTURE') && word != null) {
+            // Clean up BERT word (removing ## from subword tokens)
+            entities.add(word.replaceAll('##', '').toLowerCase());
+          }
+        }
+        return entities.toList();
+      }
+    } catch (e) {
+      debugPrint('Clinical BERT Error: $e');
+    }
+    return [];
   }
 
   Future<SymptomAnalysis> refineAnalysis(String originalDescription, List<String> questions, List<String> answers, [Profile? profile]) async {
-    final refinedDescription = "Patient reported: $originalDescription. " + 
-        List.generate(questions.length, (i) => "Q: ${questions[i]} A: ${i < answers.length ? answers[i] : 'N/A'}").join(". ");
+    final refinedDescription = "Patient reported: $originalDescription. "
+        "${List.generate(questions.length, (i) => "Q: ${questions[i]} A: ${i < answers.length ? answers[i] : 'N/A'}").join(". ")}";
     
     return _analyzeInternal(refinedDescription, profile: profile, isRefined: true);
   }
@@ -43,21 +107,22 @@ class AIService {
       }
 
       final prompt = isRefined 
-          ? "<s>[INST] You are a BioMistral Clinical Expert. A patient has provided additional details to their previous report: '$description'. ${contextString} "
+          ? "<s>[INST] You are a BioMistral Clinical Expert. A patient has provided additional details to their previous report: '$description'. $contextString "
             "Based on the ENTIRE context, provide a FINAL reasoning. "
             "Return ONLY a JSON object with: "
             "{ \"possible_causes\": \"specific clinical causes based on full data\", \"first_aid_opinion\": \"precautionary and specific triage steps\", \"advice\": \"comprehensive medical summary\", \"follow_up_logic\": \"clinical reasoning path\" } [/INST]</s>"
-          : "<s>[INST] You are BioMistral, a Clinical Assistant. Analyze: '$description'. ${contextString} "
+          : "<s>[INST] You are BioMistral, a Clinical Assistant. Analyze: '$description'. $contextString "
             "Your priority is to identify missing clinical parameters (Duration, Severity, Character, Location). "
             "If the report is vague (e.g. 'I have a headache'), DO NOT give a definitive cause. Instead, focus on asking for the missing data. "
             "Format: Symptoms: [s], Causes: [c], First Aid: [Precautionary guidance], Questions: [q1|q2|q3], Advice: [a] [/INST]</s>";
       
+      debugPrint('Calling BioMistral Inference API...');
       final response = await http.post(
-
-        Uri.parse(_modelUrl),
+        Uri.parse(_mistralUrl),
         headers: {
           'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: jsonEncode({
           'inputs': prompt,
@@ -66,7 +131,7 @@ class AIService {
             'temperature': 0.3,
           },
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -81,24 +146,10 @@ class AIService {
       
       return _generateFallbackAnalysis(description);
     } catch (e) {
+      debugPrint('BioMistral Error: $e');
+      debugPrint('Engaging local clinical reasoning fallback...');
       return _generateFallbackAnalysis(description);
     }
-  }
-
-  String _extractPrimarySymptom(String description) {
-    if (description.contains('Original:')) {
-      final parts = description.split('Original:');
-      if (parts.length > 1) {
-        return parts[1].split('.')[0].trim();
-      }
-    }
-    return description;
-  }
-
-  String _extractAnswer(String description, int index) {
-    final matches = RegExp(r'A: (.*?)(?=\. Q:|\.|$)').allMatches(description).map((m) => m.group(1) ?? '').toList();
-    if (index < matches.length) return matches[index];
-    return 'Not provided';
   }
 
   SymptomAnalysis _parseJSONResponse(String text, String originalDescription) {

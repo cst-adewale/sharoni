@@ -11,19 +11,23 @@ import 'package:sharoni/features/profile/presentation/profile_controller.dart';
 import 'package:sharoni/features/auth/presentation/profile_setup_page.dart';
 
 import 'package:sharoni/core/services/notification_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables
+  await dotenv.load(fileName: "env");
+  
   // Initialize Notifications
   // Initialize Notifications with global key
   await NotificationService().init(key: messengerKey);
 
   await Supabase.initialize(
-    url: 'https://sfvflstzralywaqkjuje.supabase.co',
-    anonKey: 'sb_publishable_y6xrbvvZJjH-slDOlw5-Gw_kRtqTQRA',
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
   runApp(

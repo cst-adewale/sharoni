@@ -90,7 +90,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _selectedSex,
+                      initialValue: _selectedSex,
                       decoration: const InputDecoration(
                         labelText: 'Sex at Birth',
                         prefixIcon: Icon(Icons.person_outline),

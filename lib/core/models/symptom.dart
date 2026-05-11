@@ -41,9 +41,9 @@ class Symptom {
     List<String>? followUpQuestions,
     List<String>? followUpAnswers,
     required this.createdAt,
-  }) : this.tags = tags ?? const [],
-       this.followUpQuestions = followUpQuestions ?? const [],
-       this.followUpAnswers = followUpAnswers ?? const [];
+  }) : tags = tags ?? const [],
+       followUpQuestions = followUpQuestions ?? const [],
+       followUpAnswers = followUpAnswers ?? const [];
 
   factory Symptom.fromJson(Map<String, dynamic> json) {
     // Helper to safely extract lists of strings

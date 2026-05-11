@@ -237,7 +237,7 @@ class InsightsPage extends ConsumerWidget {
               children: [
                 Icon(Icons.lightbulb_outline, color: AppTheme.secondaryColor),
                 SizedBox(width: 12),
-                const Text(
+                Text(
                   'Quick Interpretation',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.secondaryColor),
                 ),
@@ -279,7 +279,7 @@ class InsightsPage extends ConsumerWidget {
               final value = isLast 
                 ? topTags.skip(4).fold<int>(0, (sum, e) => sum + e.value).toDouble()
                 : topTags[i].value.toDouble();
-              final label = isLast ? 'Other' : topTags[i].key;
+
 
               return PieChartSectionData(
                 color: colors[i % colors.length],
@@ -320,14 +320,14 @@ class InsightsPage extends ConsumerWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.8)],
+          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -341,7 +341,7 @@ class InsightsPage extends ConsumerWidget {
             child: CircularProgressIndicator(
               value: percentage,
               strokeWidth: 8,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
@@ -404,9 +404,9 @@ class InsightsPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

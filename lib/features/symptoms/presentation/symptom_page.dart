@@ -229,9 +229,15 @@ class _SymptomPageState extends ConsumerState<SymptomPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                          SizedBox(width: 12),
-                          Text('AI is analyzing...', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                          const SizedBox(width: 12),
+                          const Flexible(
+                            child: Text(
+                              'Clinical BERT & BioMistral are analyzing...', 
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -271,16 +277,32 @@ class _SymptomPageState extends ConsumerState<SymptomPage> {
               children: [
                 Icon(needsClarification ? Icons.pending_actions : Icons.auto_awesome, color: needsClarification ? Colors.orange : AppTheme.primaryColor),
                 const SizedBox(width: 12),
-                Text(
-                  needsClarification ? 'Clinical Refinement' : 'Final Health Insights',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: needsClarification ? Colors.orange[800] : AppTheme.primaryColor,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        needsClarification ? 'Clinical Refinement' : 'Final Health Insights',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: needsClarification ? Colors.orange[800] : AppTheme.primaryColor,
+                        ),
+                      ),
+                      Text(
+                        'Extracted via Clinical BERT NER specialist',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: needsClarification ? Colors.orange[400] : AppTheme.primaryColor.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
             if (needsClarification)
               Container(

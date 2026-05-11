@@ -141,7 +141,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedBloodType,
+                        initialValue: _selectedBloodType,
                         decoration: InputDecoration(
                           labelText: 'Blood Type',
                           prefixIcon: const Icon(Icons.bloodtype, color: AppTheme.primaryColor),
@@ -156,7 +156,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedGenotype,
+                        initialValue: _selectedGenotype,
                         decoration: InputDecoration(
                           labelText: 'Genotype',
                           prefixIcon: const Icon(Icons.biotech, color: AppTheme.primaryColor),
@@ -193,7 +193,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 const Text('Social & Notification Preferences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedAlertChannel,
+                  initialValue: _selectedAlertChannel,
                   decoration: InputDecoration(
                     labelText: 'Preferred Alert Channel',
                     prefixIcon: const Icon(Icons.notifications_active_outlined, color: AppTheme.primaryColor),
@@ -285,13 +285,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Navigator.pop(context);
               try {
                 await ref.read(authControllerProvider.notifier).deleteAccount();
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Account deleted successfully')),
                   );
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
                   );
@@ -311,7 +311,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final user = ref.watch(authControllerProvider).value;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FB), // Subtle off-white from image
+      backgroundColor: const Color(0xFFF9F9FB),
       body: profileAsync.when(
         data: (profile) => SafeArea(
           child: SingleChildScrollView(
@@ -319,7 +319,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Header Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,7 +366,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 24),
 
-                // User Info Card
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -375,7 +373,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
+                        color: Colors.black.withValues(alpha: 0.02),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -446,7 +444,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Statistics Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -459,7 +456,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                     const SizedBox(width: 12),
                     _buildStatCard(
-                      icon: Icons.link, // or pill icon if available
+                      icon: Icons.link,
                       iconColor: Colors.white,
                       iconBgColor: const Color(0xFF6B7BFF),
                       value: '4',
@@ -477,7 +474,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Health Information Grid Card
                 _buildSectionCard(
                   title: 'Health Information',
                   child: Column(
@@ -502,7 +498,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Allergies Card
                 _buildSectionCard(
                   title: 'Allergies',
                   child: Wrap(
@@ -556,7 +551,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                         )
                       else ...[
-                        _buildGridItem('Name', profile!.emergencyContactName!),
+                        _buildGridItem('Name', profile.emergencyContactName!),
                         const SizedBox(height: 16),
                         _buildGridItem('Phone', profile.emergencyContactPhone ?? 'Not set'),
                         const SizedBox(height: 16),
@@ -567,7 +562,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Settings List Card
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -623,7 +617,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 
                 const SizedBox(height: 24),
                 
-                // Sign Out Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: SizedBox(
