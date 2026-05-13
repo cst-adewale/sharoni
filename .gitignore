@@ -72,3 +72,8 @@ app.*.map.json
 
 # Mac OS metadata
 .DS_Store
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
